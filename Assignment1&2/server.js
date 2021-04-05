@@ -10,12 +10,22 @@ const fetch = require('node-fetch')
 var bodyParser = require('body-parser'); 
 var path = require('path');
 var alert = require('alert');
+var db;
+
+// Atlas-mongodb
+const mongoose = require('mongoose')
+const connection = 'mongodb+srv://yuning:529566@cluster0.ynsfl.mongodb.net/imgDB?retryWrites=true&w=majority'
+mongoose.connect(connection, { 
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useFindAndModify: true 
+}, () => console.log('mongoose connected!'))
+mongoose.connection.on('error', console.error)
 
 
 const mongodb = require('mongodb')
-const MONGO_URL = process.env.MONGO_DB_CONNECTION_STRING
 
-let client = new mongodb.MongoClient(MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
+let client = new mongodb.MongoClient(connection, { useNewUrlParser: true, useUnifiedTopology: true })
 
 client.connect().then(client => {
   db = client.db()
@@ -41,6 +51,7 @@ io.on('connect', (socket) => {
   })
 })
 
+//store images
 app.post('/upload', (req, res, next) => {
   const form = formidable({ multiples: true });
   form.parse(req, function (err, fields, files) {
@@ -59,13 +70,26 @@ app.post('/upload', (req, res, next) => {
         datetime: fields.timestamp,
         imgPath: imageUrl
       };
-
+      //insert
+      db.collection('images').insertOne(doc, function (err, res) {
+        if (err) throw err
+        console.log('successfully saved into mongodb');
+      });
+      res.status(200).json({
+        message: 'OK'
+      });
     });
   });
 });
 
-
-
+//fetch images
+app.get("/show", (req, res) => {
+  db.collection('images').find({}).toArray(function (err, docs) {
+    if (err) return res.status(500).send({ error: err });
+    
+    res.send(docs.length > 0 ? docs : 'No Data');
+  });
+});
 
 
 http.listen(port, () => {
