@@ -1,0 +1,17 @@
+* {
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.controlbar{
+    display: inline-block;
+    margin-right: 1rem;
+}
+
+.userinfo{
+    margin-bottom: 1rem;
+}
+
+#canvas{
+    border: 2px solid black;
+}
