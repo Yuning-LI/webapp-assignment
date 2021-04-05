@@ -77,7 +77,7 @@ function submitPerson(counter){
             } else {
                 var actorInfo = checkActor(data.cast, answerPerson);
                 if(actorInfo !== undefined){
-                    console.log(actorInfo)
+                    //console.log(actorInfo)
                     var personConf = {
                         name: actorInfo.original_name,
                         image: IMAGE_URL + actorInfo.profile_path
@@ -85,7 +85,7 @@ function submitPerson(counter){
                     addPersonInfo(personConf);
                     addMovieForm();
                 } else {
-                    console.log('wrong answer');
+                    window.alert('wrong answer');
                 }
             }
         })
@@ -129,14 +129,15 @@ function checkUsedMovie(movieName){
 function submitMovie(counter){
     var input = document.getElementById('answer_movie' + counter);
     var answerMovie = input.value.trim();
-    console.log(document.getElementById('answer_person' + counter))
+    //console.log(document.getElementById('answer_person' + counter))
     var personName = document.getElementById('answer_person' + counter).value;
-    console.log('check used movie: ',checkUsedMovie(answerMovie));
+    //console.log('check used movie: ',checkUsedMovie(answerMovie));
     if(checkUsedMovie(answerMovie)){
-        alert('movie already entered, please enter different name');
-        console.log('movie name already used');
+        window.alert('Movie already entered, please try different movie');
+        //console.log('movie name already used');
     } else {
         fetchMovie(answerMovie).then(data => {
+            //console.log(data);
             var movieConf = {
                 title: data.results[0].original_title,
                 releaseDate: data.results[0].release_date,
@@ -150,23 +151,30 @@ function submitMovie(counter){
                     break;
                 }
             }
+            //console.log('answerMovieId', answerMovieId)
             fetchPerson(answerMovieId).then(data => {
-                //console.log('crew and cast: ' data);
+                console.log('crew and cast: ' , data);
+                if(data.crew == undefined){
+                    window.alert('wrong answer');
+                    return;
+                }
                 var directorInfo = checkDirector(data.crew, personName);
                 if(directorInfo !== undefined){
+                    counter++;
                     addMovieInfo(movieConf);
                     addPersonForm();
-                    usedMovie.push(currentMovie);
-                    counter++;
+                    usedMovie.push(answerMovie);
+                    currentMovie = movieConf.title;
                 } else {
                     var actorInfo = checkActor(data.cast, personName);
                     if(actorInfo !== undefined){
+                        counter++;
                         addMovieInfo(movieConf);
                         addPersonForm();
-                        usedMovie.push(currentMovie);
-                        counter++;
+                        usedMovie.push(answerMovie);
+                        currentMovie = movieConf.title;
                     } else {
-                        console.log('wrong answer');
+                        window.alert('wrong answer');
                     }
                 }
             })
@@ -210,11 +218,23 @@ function addMovieForm(){
     movieFormDiv.className = 'quiz_form'
     movieFormDiv.innerHTML =`
         <label for="answer_movie${counter}">Enter his / her movie name : </label>
-        <span><input class="" id="answer_movie${counter}" type="text"></span>
-        <button class="form_div" onclick="submitMovie(${counter})">Submit</button>
+        <span><input class="" id="answer_movie${counter}" type="text" placeholder="Enter movie name"></span>
+        <button class="form_div" id="submit_movie${counter}" onclick="submitMovie(${counter})">Submit</button>
         <span class="error_message"></span>
     `;
     body.appendChild(movieFormDiv);
+    var input = document.getElementById('answer_movie'+counter);
+    input.focus();
+    input.addEventListener('keydown', function(e){
+        e = e || window.event;
+        if(e.keyCode == 13){
+            e.preventDefault();
+            submitMovie(counter);
+        }
+    })
+    if(document.getElementById('answer_person'+counter-1) !== null){
+        document.getElementById('answer_person'+counter-1).disabled = true;
+    }
 }
 
 function addPersonForm(){
@@ -223,11 +243,24 @@ function addPersonForm(){
     personFormDiv.className = 'quiz_form'
     personFormDiv.innerHTML =`
         <label for="answer_person${counter}">Enter director / actor name : </label>
-        <span><input class="" id="answer_person${counter}" type="text"></span>
-        <button class="form_div" onclick="submitPerson(${counter})">Submit</button>
+        <span><input class="" id="answer_person${counter}" type="text" placeholder="Enter full name"></span>
+        <button class="form_div" id="submit_person${counter}" onclick="submitPerson(${counter})">Submit</button>
         <span class="error_message"></span>
     `;
     body.appendChild(personFormDiv);
+
+    var input = document.getElementById('answer_person'+counter);
+    input.focus();
+    input.addEventListener('keydown', function(e){
+        e = e || window.event;
+        if(e.keyCode == 13){
+            e.preventDefault();
+            submitPerson(counter);
+        }
+    })
+    if(document.getElementById('answer_movie'+counter) !== null){
+        document.getElementById('answer_movie'+counter).disabled = true;
+    }
 }
 
 // ----- add page structure functions end -----
@@ -235,5 +268,4 @@ function addPersonForm(){
 addEventListener('load', function(){
     init();
 });
-
 
