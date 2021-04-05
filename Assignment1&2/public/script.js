@@ -310,7 +310,35 @@ saveImageButton.addEventListener('click', function(){
     })
 })
 
-
-
-
+// show saved images
+var showImageButton = document.getElementById('saved_images');
+showImageButton.addEventListener('click', function(){
+    var w = window.open("#saved_images", target = "_blank");
+    var count = 0;
+    fetch("/show")
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (json) {
+        for (var {username, datetime, imgPath} of json) {
+            var date = datetime.split("_")[0];
+            var time = datetime.split("_")[1];
+            var relativePath = imgPath.split("public")[1];
+            var imageDiv = document.createElement("div");
+            imageDiv.id = 'uid_' + count;
+            imageDiv.innerHTML = ` 
+                <ul id="uList_${count}" class="uList" style="list-style-type: none; text-align:left; display: inline-block; border: 1px solid black;">
+                    <li>  <strong> Username: ${username} </strong> <br/>
+                        <strong> Image url: </strong> <a href="${relativePath}" target="_blank">Link</a><br/>
+                        <strong> Upload time: ${date} ${time}</strong><br/>
+                        <img src="${relativePath}" style="background:white; border:1px solid black;">
+                    </li>
+                </ul>
+            `;
+            w.document.write(imageDiv.innerHTML);
+            count++;
+        }
+        w.document.close();
+      });
+})
 
